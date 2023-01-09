@@ -1,39 +1,30 @@
 package jm.task.core.jdbc;
 
 import jm.task.core.jdbc.dao.UserDao;
-import jm.task.core.jdbc.dao.UserDaoHibernateImpl;
 import jm.task.core.jdbc.dao.UserDaoJDBCImpl;
 import jm.task.core.jdbc.model.User;
+import jm.task.core.jdbc.service.UserService;
+import jm.task.core.jdbc.service.UserServiceImpl;
 import jm.task.core.jdbc.util.Util;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.SQLException;
 
 public class Main {
-    public static void main(String[] args) {
-        Util.getSessionFactory();
-        UserDaoHibernateImpl userDaoHibernate = new UserDaoHibernateImpl();
-        userDaoHibernate.createUsersTable();
-        userDaoHibernate.saveUser("Филипп", "Моррис", (byte) 99);
-        userDaoHibernate.saveUser("Олег", "Олегов", (byte) 23);
-        userDaoHibernate.saveUser("Павел", "Головин", (byte) 55);
-        userDaoHibernate.saveUser("Кирилл", "Бабич", (byte) 12);
-        userDaoHibernate.removeUserById(2);
-        userDaoHibernate.getAllUsers();
-        userDaoHibernate.cleanUsersTable();
-        userDaoHibernate.dropUsersTable();
+    public static void main(String[] args) throws SQLException {
+        // реализуйте алгоритм
+        Util.getConnection();
+        UserDao userDao = new UserDaoJDBCImpl();
 
-/*        UserDao userDao = new UserDaoJDBCImpl();
         userDao.createUsersTable();
 
-        userDao.saveUser("Филипп", "Киркоров", (byte) 13);
-        userDao.saveUser("Герман", "Севастьянов", (byte) 25);
-        userDao.saveUser("Раб", "Божий", (byte) 33);
-        userDao.saveUser("Вовкин", "Дед", (byte) 69);
-        userDao.getAllUsers();
+        userDao.saveUser("Name1", "LastName1", (byte) 20);
+        userDao.saveUser("Name2", "LastName2", (byte) 25);
+        userDao.saveUser("Name3", "LastName3", (byte) 31);
+        userDao.saveUser("Name4", "LastName4", (byte) 38);
+
         userDao.removeUserById(1);
+        userDao.getAllUsers();
         userDao.cleanUsersTable();
-        userDao.dropUsersTable();*/
+        userDao.dropUsersTable();
     }
 }

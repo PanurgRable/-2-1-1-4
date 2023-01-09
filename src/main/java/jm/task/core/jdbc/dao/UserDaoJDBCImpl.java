@@ -1,108 +1,158 @@
 package jm.task.core.jdbc.dao;
 
-import com.mysql.cj.jdbc.StatementImpl;
 import jm.task.core.jdbc.model.User;
-import jm.task.core.jdbc.util.Util;
-import org.hibernate.internal.log.ConnectionAccessLogger;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import static jm.task.core.jdbc.util.Util.getConnection;
 
 public class UserDaoJDBCImpl implements UserDao {
-    private List<User> users = new ArrayList<>();
-    private static final Connection CONNECTION = Util.getConnection();
-
-    private static final String CREATE = "CREATE TABLE IF NOT EXISTS test (" +
-            "id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY ," +
-            "name varchar(45) not null ," +
-            "lastName varchar(45) not null ," +
-            "age int not null)";
-    private static final String DELETE_TABLE = "DROP TABLE IF EXISTS test";
-    private static final String ALL = "SELECT * FROM test";
-    private static final String DELETE = "DELETE FROM test WHERE id = ?";
-    private static final String INSERT = "INSERT INTO test (name, lastName, age)" +
-            " VALUES (?, ?, ?)";
-    private static final String CLEAR = "TRUNCATE TABLE test";
+    private static Connection connection;
 
     public UserDaoJDBCImpl() {
+        connection = getConnection();
     }
 
     public void createUsersTable() {
-        try (Statement statement = CONNECTION.createStatement()) {
-            statement.executeUpdate(CREATE);
-            System.out.println("Таблица создана");
-            CONNECTION.commit();
+
+        String sql = "CREATE TABLE IF NOT EXISTS Abc (" + // НАЗВАНИЕ ТАБЛИЦЫ
+                "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                "name VARCHAR(45) , " +
+                "lastName VARCHAR(45), " +
+                "age INT )";
+
+        try (Connection connection = getConnection();
+             Statement statement = connection.createStatement()){
+            connection.setAutoCommit(false);
+            statement.execute(sql);
+            connection.commit();
+            System.out.println("Создана таблица. Метод createUsersTable");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            try {
+                connection.rollback();
+
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
         }
+
+
+
     }
 
     public void dropUsersTable() {
-        try (Statement statement = CONNECTION.createStatement()) {
-            statement.executeUpdate(DELETE_TABLE);
-            System.out.println("Таблица удалена");
-            CONNECTION.commit();
+        String sql = "DROP TABLE IF EXISTS Abc";   // НАЗВАНИЕ ТАБЛИЦЫ
+        try (Connection connection = getConnection();
+             Statement statement = connection.createStatement()){
+            connection.setAutoCommit(false);
+            statement.execute(sql);
+            connection.commit();
+
+
+            System.out.println("Удалена таблица. метод dropUsersTable ");
+
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            try {
+                connection.rollback();
+
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
         }
+
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        try (PreparedStatement preparedStatement = CONNECTION.prepareStatement(INSERT)) {
+
+        String sql = "INSERT INTO Abc (name, lastName, age) VALUES (?, ?, ?)"; // НАЗВАНИЕ ТАБЛИЦЫ
+        try (
+                PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, lastName);
             preparedStatement.setByte(3, age);
             preparedStatement.executeUpdate();
-            System.out.println("User с именем - " + name + " добавлен в базу данных");
-            CONNECTION.commit();
+            connection.commit();
+            System.out.println("User с именем " + name + " добавлен в базу данных");
+
         } catch (SQLException e) {
+            e.printStackTrace();
             try {
-                CONNECTION.rollback();
+                connection.rollback();
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
-            e.printStackTrace();
         }
+
     }
 
     public void removeUserById(long id) {
-        try (PreparedStatement preparedStatement = CONNECTION.prepareStatement(DELETE)) {
+        String sql = "DELETE FROM Abc WHERE Id = ?"; // НАЗВАНИЕ ТАБЛИЦЫ
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
             preparedStatement.setLong(1, id);
-            preparedStatement.executeUpdate();
-            System.out.println("User с id = " + id + " удален из базы данных");
-            CONNECTION.commit();
+            preparedStatement.execute();
+            connection.commit();
+
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            System.out.println("удален пользователь " + id + "метод removeUserById");
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
     public List<User> getAllUsers() {
-        try (Statement statement = CONNECTION.createStatement()) {
-            ResultSet resultSet = statement.executeQuery(ALL);
-            while (resultSet.next()) {
-                User user = new User();
-                user.setId(resultSet.getLong("id"));
-                user.setName(resultSet.getString("name"));
-                user.setLastName(resultSet.getString("lastName"));
-                user.setAge(resultSet.getByte("age"));
-                users.add(user);
-                System.out.println(users);
+        List<User> userList = new ArrayList<>();
+        String sql = "SELECT * FROM Abc"; // НАЗВАНИЕ ТАБЛИЦЫ
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()){
+                User user1 = new User();
+                user1.setName(resultSet.getString("name"));
+                user1.setLastName(resultSet.getString("lastName"));
+                user1.setAge(resultSet.getByte("age"));
+                userList.add(user1);
+                System.out.println(userList);
+                System.out.println("Вывод списка метод getAllUsers");
+
             }
-            CONNECTION.commit();
+            connection.commit();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            try {
+                connection.rollback();
+
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
         }
-        return users;
+        return userList;
     }
 
-    public void cleanUsersTable () {
-        try (Statement statement = CONNECTION.createStatement()) {
-            statement.executeUpdate(CLEAR);
-            System.out.println("Таблица очищена");
-            CONNECTION.commit();
+    public void cleanUsersTable() {
+        String sql = "DELETE FROM Abc"; // НАЗВАНИЕ ТАБЛИЦЫ
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
+            preparedStatement.execute();
+            connection.commit();
+            System.out.println("Удален юзер метод cleanUsersTable");
+            connection.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 }
